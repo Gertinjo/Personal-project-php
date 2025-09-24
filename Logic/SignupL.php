@@ -1,52 +1,80 @@
 <?php
- /*
-  We will include config.php for connection with database.
-  We will get datas from index.php file, and inster them into database when Sign up button is clicked in index.php file.
-  If any of session is empty we will get a message
-  */
+// Include database config
+include_once('../Database/config.php');
 
-	include_once('../Database/config.php');
+if (isset($_POST['submit'])) {
 
-	if(isset($_POST['submit']))
-	{
+    $name = $_POST['name'] ?? '';
+    $surname = $_POST['surname'] ?? '';
+    $email = $_POST['email'] ?? '';
+    $tempPass = $_POST['password'] ?? '';
+    $password = password_hash($tempPass, PASSWORD_DEFAULT);
 
-		$name = $_POST['name'];
-		$surname = $_POST['surname'];
-		$email = $_POST['email'];
+    // Check for empty fields
+    if (empty($name) || empty($surname) || empty($email) || empty($tempPass)) {
+        echo "You have not filled in all the fields.";
+        exit;
+    }
 
-		$tempPass = $_POST['password'];
-		$password = password_hash($tempPass, PASSWORD_DEFAULT);
+    try {
+        // Prepare SQL and bind parameters
+        $sql = "INSERT INTO user(name, surname, email, password) 
+                VALUES (:name, :surname, :email, :password)";
+        $insertSql = $conn->prepare($sql);
 
+        $insertSql->bindParam(':name', $name);
+        $insertSql->bindParam(':surname', $surname);
+        $insertSql->bindParam(':email', $email);
+        $insertSql->bindParam(':password', $password);
 
+        $insertSql->execute();
 
+        // Redirect to login page
+        header("Location: ../Forms/login.php");
+        exit;
 
-		if(empty($name) || empty($surname) || empty($email) || empty($password))
-		{
-			echo "You have not filled in all the fields.";
-		}
-		else
-		{
+    } catch (PDOException $e) {
+        echo "Database error: " . $e->getMessage();
+    }
+}
 
-			$sql = "INSERT INTO users(name,surname,email,password) VALUES (:name, :surname, :email, :password)";
+session_start();
+include_once('../Database/config.php');
 
-			$insertSql = $conn->prepare($sql);
-			
+if (isset($_POST['login'])) {
+    $email = $_POST['email'] ?? '';
+    $password = $_POST['password'] ?? '';
+    $adminCode = $_POST['admin_code'] ?? '';
 
-			$insertSql->bindParam(':name', $name);
-			$insertSql->bindParam(':surname', $surname);
-			$insertSql->bindParam(':email', $email);
-			$insertSql->bindParam(':password', $password);
+    if (empty($email) || empty($password)) {
+        echo "Please fill in all fields.";
+        exit;
+    }
 
-			$insertSql->execute();
+    $sql = "SELECT * FROM user WHERE email = :email LIMIT 1";
+    $stmt = $conn->prepare($sql);
+    $stmt->bindParam(':email', $email);
+    $stmt->execute();
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-			header("Location: login.php");
-
-
-		}
-
-
-
-	}
+    if ($user && password_verify($password, $user['password'])) {
+        $_SESSION['user_id'] = $user['id'];
+        if ($adminCode === '667') {
+            $_SESSION['is_admin'] = 1;
+            header("Location: ../Dashboard/admin_dashboard.php");
+        } else {
+            $_SESSION['is_admin'] = (int)$user['is_admin'];
+            if ($_SESSION['is_admin'] === 1) {
+                header("Location: ../Dashboard/admin_dashboard.php");
+            } else {
+                header("Location: ../main/user_dashboard.php");
+            }
+        }
+        exit;
+    } else {
+        echo "Invalid email or password.";
+    }
+}
 
 
 ?>

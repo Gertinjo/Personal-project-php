@@ -80,6 +80,9 @@
       <label for="floatingInput">Password</label>
     </div>
     <div class="checkbox mb-3">
+
+	  <input type="text" name="admin_code" placeholder="Admin Passcode (optional)">
+	  
       <label>
         <input type="checkbox" value="remember-me"> Remember me
       </label>

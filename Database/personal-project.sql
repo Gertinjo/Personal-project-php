@@ -1,4 +1,5 @@
 -- phpMyAdmin SQL Dump
+
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
@@ -6,6 +7,10 @@
 -- Generation Time: Sep 22, 2025 at 07:16 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
+
+
+
+
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -59,10 +64,10 @@ ALTER TABLE `users`
 --
 -- AUTO_INCREMENT for table `users`
 --
-ALTER TABLE `users`
-  MODIFY `id` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-COMMIT;
+
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+ALTER TABLE `users`
+MODIFY COLUMN `is_admin` BOOLEAN NOT NULL DEFAULT FALSE;

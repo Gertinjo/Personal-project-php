@@ -2,304 +2,306 @@
 session_start();
 include_once('../Database/config.php');
 
-
+// Redirect if not logged in
 if (!isset($_SESSION['id'])) {
     header("Location: ../Forms/login.php");
     exit;
 }
-if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== 1) { 
+
+// Check admin privilege
+if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] != 1) {
     echo "Access denied. You are not an admin.";
     exit;
 }
+
+// Handle Add Book form submission
+if (isset($_POST['submit'])) {
+    $required_fields = ['Book_name', 'description', 'Price', 'rating', 'Books_image'];
+    $valid = true;
+    foreach ($required_fields as $field) {
+        if (empty($_POST[$field])) {
+            $valid = false;
+            break;
+        }
+    }
+
+    if ($valid) {
+        $Book_name = trim($_POST['Book_name']);
+        $description = trim($_POST['description']);
+        $Price = trim($_POST['Price']);
+        $rating = (int)$_POST['rating'];
+        $Books_image = trim($_POST['Books_image']);
+
+        try {
+            // Note: Backticks around Book name if your DB column has spaces
+            $sql = "INSERT INTO books (`Book_name`, description, Price, rating, Books_image) 
+                    VALUES (:Book_name, :description, :Price, :rating, :Books_image)";
+            $insertbook = $conn->prepare($sql);
+
+            $insertbook->bindParam(':Book_name', $Book_name, PDO::PARAM_STR);
+            $insertbook->bindParam(':description', $description, PDO::PARAM_STR);
+            $insertbook->bindParam(':Price', $Price, PDO::PARAM_STR);
+            $insertbook->bindParam(':rating', $rating, PDO::PARAM_INT);
+            $insertbook->bindParam(':Books_image', $Books_image, PDO::PARAM_STR);
+
+            $insertbook->execute();
+
+            $_SESSION['success_message'] = "Book added successfully!";
+            header("Location: " . $_SERVER['PHP_SELF']);
+            exit;
+        } catch (PDOException $e) {
+            $_SESSION['error_message'] = "Database error: " . $e->getMessage();
+            header("Location: " . $_SERVER['PHP_SELF']);
+            exit;
+        }
+    } else {
+        $_SESSION['error_message'] = "All fields are required!";
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit;
+    }
+}
+
+// Fetch users & books data
+$users_data = $conn->query("SELECT * FROM user")->fetchAll(PDO::FETCH_ASSOC);
+$books_data = $conn->query("SELECT * FROM books")->fetchAll(PDO::FETCH_ASSOC);
+
 ?>
 
-
-<?php 
-/*Creating a session  based on a session identifier, passed via a GET or POST request.
-  We will include config.php for connection with database.
-  We will fetch all datas from users in database and show them.
-  If a user is admin, he can update or delete a user data.
-  */
-
-    include_once('../database/config.php');
-
-    if (empty($_SESSION['email'])) {
-          header("Location: login.php");
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css" rel="stylesheet" />
+  <style>
+    body {
+      min-height: 100vh;
+      background: #f8f9fa;
     }
-   
-    // Fetch users
-    $sql = "SELECT * FROM user";
-    $selectUsers = $conn->prepare($sql);
-    $selectUsers->execute();
-    $users_data = $selectUsers->fetchAll();
-    
-    // Fetch Books
-    $sql_Books = "SELECT * FROM books";
-    $selectBooks = $conn->prepare($sql_Books);
-    
-    try {
-        // Try to run the query
-        $selectBooks->execute();
-        $Books_data = $selectBooks->fetchAll(PDO::FETCH_ASSOC);
-    } catch (PDOException $e) {
-        // Set empty array if error
-        $Books_data = [];
+    .sidebar {
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 240px;
+      background: #343a40;
+      color: white;
+      padding-top: 1rem;
+      z-index: 1000;
     }
+    .sidebar a {
+      color: #adb5bd;
+      display: flex;
+      align-items: center;
+      padding: 12px 20px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: background 0.3s, color 0.3s;
+    }
+    .sidebar a:hover, .sidebar a.active {
+      background: #495057;
+      color: white;
+    }
+    .sidebar a i {
+      margin-right: 10px;
+      font-size: 1.2rem;
+    }
+    main {
+      margin-left: 240px;
+      padding: 2rem;
+    }
+    .card-icon {
+      font-size: 2rem;
+      opacity: 0.3;
+      position: absolute;
+      top: 10px;
+      right: 15px;
+    }
+    .table-responsive {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
 
+  <nav class="sidebar">
+    <h3 class="text-center mb-4">Admin Panel</h3>
+    <a href="#" class="active"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    <a href="list_Books.php"><i class="bi bi-book"></i> Books</a>
+    <a href="../Logic/logout.php"><i class="bi bi-box-arrow-right"></i> Logout</a>
+  </nav>
 
- ?>
-
- <!DOCTYPE html>
- <html>
- <head>
- 	<title>Dashboard</title>
- 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
- 	 <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
-    <meta name="generator" content="Hugo 0.88.1">
-  	<link rel="apple-touch-icon" href="/docs/5.1/assets/img/favicons/apple-touch-icon.png" sizes="180x180">
-	<link rel="icon" href="/docs/5.1/assets/img/favicons/favicon-32x32.png" sizes="32x32" type="image/png">
-	<link rel="icon" href="/docs/5.1/assets/img/favicons/favicon-16x16.png" sizes="16x16" type="image/png">
-	<link rel="manifest" href="/docs/5.1/assets/img/favicons/manifest.json">
-	<link rel="mask-icon" href="/docs/5.1/assets/img/favicons/safari-pinned-tab.svg" color="#7952b3">
-	<link rel="icon" href="/docs/5.1/assets/img/favicons/favicon.ico">
-	<meta name="theme-color" content="#7952b3">
- </head>
- <body>
- 
- 
- <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
-  <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3" href="#"><?php echo "Welcome to dashboard ".$_SESSION['name']; ?></a>
-  <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
-  <input class="form-control form-control-dark w-50" type="text" placeholder="Search" aria-label="Search">
-  <div class="navbar-nav">
-    <div class="nav-item text-nowrap">
-      <a class="nav-link px-3" href="logout.php">Sign out</a>
+  <main>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2>Welcome, <?= htmlspecialchars($_SESSION['name']); ?>!</h2>
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBookModal">
+        <i class="bi bi-plus-lg"></i> Add New Book
+      </button>
     </div>
-  </div>
-</header>
 
-<div class="container-fluid">
-  <div class="row">
-    <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
-      <div class="position-sticky pt-3">
-        <ul class="nav flex-column">
-           <?php if ($_SESSION['is_admin'] == 'true') { ?>
-            <li class="nav-item">
-              <a class="nav-link" href="home.php">
-                <span data-feather="file"></span>
-                Home
-              </a>
-            </li>
-          <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="dashboard.php">
-              <span data-feather="home"></span>
-              Dashboard
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="list_Books.php">
-              <span data-feather="file"></span>
-              Books
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="bookings.php">
-              <span ></span>
-              Bookings
-            </a>
-          </li>
-        </ul>
-        <?php }else {?>
-          <li class="nav-item">
-              <a class="nav-link" href="home.php">
-               
-                Home
-              </a>
-            </li>
-          <li class="nav-item">
-          <a class="nav-link" href="bookings.php">
-            <span ></span>
-            Bookings
-          </a>
-        </li>
-        </ul>
-      <?php
-      } ?>
-
-        
+    <!-- Messages -->
+    <?php if (isset($_SESSION['success_message'])): ?>
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <?= htmlspecialchars($_SESSION['success_message']); ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
-    </nav>
+      <?php unset($_SESSION['success_message']); ?>
+    <?php endif; ?>
 
-    <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2">Dashboard</h1>
+    <?php if (isset($_SESSION['error_message'])): ?>
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <?= htmlspecialchars($_SESSION['error_message']); ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
-      
-      <!-- Display success message if exists -->
-      <?php if(isset($_SESSION['success_message'])): ?>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-          <?php echo $_SESSION['success_message']; ?>
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      <?php unset($_SESSION['error_message']); ?>
+    <?php endif; ?>
+
+    <!-- Summary Cards -->
+    <div class="row mb-5">
+      <div class="col-md-6 col-lg-3 mb-3">
+        <div class="card shadow-sm position-relative">
+          <div class="card-body">
+            <h5 class="card-title">Users</h5>
+            <h3><?= count($users_data); ?></h3>
+            <i class="bi bi-people card-icon"></i>
+          </div>
         </div>
-        <?php unset($_SESSION['success_message']); ?>
-      <?php endif; ?>
-      
-      <!-- Display error message if exists -->
-      <?php if(isset($_SESSION['error_message'])): ?>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-          <?php echo $_SESSION['error_message']; ?>
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+      <div class="col-md-6 col-lg-3 mb-3">
+        <div class="card shadow-sm position-relative">
+          <div class="card-body">
+            <h5 class="card-title">Books</h5>
+            <h3><?= count($books_data); ?></h3>
+            <i class="bi bi-book card-icon"></i>
+          </div>
         </div>
-        <?php unset($_SESSION['error_message']); ?>
-      <?php endif; ?>
+      </div>
+    </div>
 
-    <?php if ($_SESSION['is_admin'] == 'true') { ?>
+    <!-- Users Table -->
+    <h3>Users</h3>
+    <div class="table-responsive mb-5">
+      <table class="table table-hover align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Surname</th>
+            <th>Email</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php foreach ($users_data as $user): ?>
+          <tr>
+            <td><?= htmlspecialchars($user['id']); ?></td>
+            <td><?= htmlspecialchars($user['name']); ?></td>
+            <td><?= htmlspecialchars($user['surname']); ?></td>
+            <td><?= htmlspecialchars($user['email']); ?></td>
+            <td>
+              <a href="../Forms/edit.php?id=<?= urlencode($user['id']); ?>" class="btn btn-sm btn-warning me-1">
+                <i class="bi bi-pencil"></i> Edit
+              </a>
+              <a href="../Logic/delete.php?id=<?= urlencode($user['id']); ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?');">
+                <i class="bi bi-trash"></i> Delete
+              </a>
+            </td>
+          </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
 
-      <h2>Users</h2>
-      <div class="table-responsive">
-        <table class="table table-striped table-sm">
-          <thead>
-            <tr>
-              <th scope="col">Id</th>
-              <th scope="col">Name</th>
-              <th scope="col">Surname</th>
-              <th scope="col">Email</th>
-              <th scope="col">Update</th>
-              <th scope="col">Delete</th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php foreach ($users_data as $user_data) { ?>
-
-               <tr>
-                <td><?php echo $user_data['id']; ?></td>
-                <td><?php echo $user_data['name']; ?></td>
-                <td><?php echo $user_data['surname']; ?></td>
-                <td><?php echo $user_data['email']; ?></td>
-                <!-- If we want to update a user we need to link into editUsers.php -->
-                <td><a href="editUsers.php?id=<?= $user_data['id'];?>">Update</a></td>
-                  <!-- If we want to delete a user we need to link into deleteUsers.php -->
-                <td><a href="deleteUsers.php?id=<?= $user_data['id'];?>">Delete</a></td>
+    <!-- Books Table -->
+    <h3>Books</h3>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>#</th>
+            <th>Book Name</th>
+            <th>Description</th>
+            <th>Price</th>
+            <th>Rating</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php if (!empty($books_data)): ?>
+            <?php foreach ($books_data as $book): ?>
+              <tr>
+                <td><?= htmlspecialchars($book['id']); ?></td>
+                <td><?= htmlspecialchars($book['Book_name']); ?></td>
+                <td><?= htmlspecialchars(mb_strimwidth($book['description'], 0, 50, '...')); ?></td>
+                <td><?= htmlspecialchars($book['Price']); ?></td>
+                <td><?= htmlspecialchars($book['rating']); ?></td>
+                <td>
+                  <a href="../Forms/editbook.php?id=<?= urlencode($user['id']); ?>" class="btn btn-sm btn-warning me-1">
+                <i class="bi bi-pencil"></i> Edit
+              </a>
+                  <a href="../Logic/deletebook.php?id=<?= urlencode($book['id']); ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this book?');">
+                    <i class="bi bi-trash"></i> Delete
+                  </a>
+                </td>
               </tr>
-              
-           <?php  } ?>
-            
-            
-          </tbody>
-        </table>
-      </div>
-     <?php  } else {
-      
-    } ?>
-    
-      <div class="d-flex justify-content-between align-items-center mt-5 mb-3">
-        <h2>Books</h2>
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBooksModal">
-          Add New Books
-        </button>
-      </div>
-      <div class="table-responsive">
-        <table class="table table-striped table-sm">
-          <thead>
-            <tr>
-              <th scope="col">Id</th>
-              <th scope="col">Books Name</th>
-              <th scope="col">Description</th>
-              <th scope="col">Price</th>
-              <th scope="col">Rating</th>
-              <th scope="col">Delete</th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php if ($_SESSION['is_admin'] == '1') { 
-                  // Debug: Print the Books data as JSON for debugging
-                  echo "<!-- Debug: " . json_encode($Books_data) . " -->";
-                  
-                  // Loop through each Books
-                  if (count($Books_data) > 0) {
-                      foreach ($Books_data as $Books) { ?>
-                         <tr>
-                          <td><?php echo $Books['id']; ?></td>
-                          <td><?php echo $Books['Books_name']; ?></td>
-                          <td><?php echo substr($Books['Books_desc'], 0, 50) . '...'; ?></td>
-                          <td><?php echo $Books['Books_quality']; ?></td>
-                          <td><?php echo $Books['Books_rating']; ?></td>
-                          <td><a href="delete_Books.php?id=<?= $Books['id'];?>" class="text-danger" onclick="return confirm('Are you sure you want to delete this Books?');">Delete</a></td>
-                        </tr>
-                  <?php }
-                  } else { ?>
-                      <tr>
-                          <td colspan="6" class="text-center">No Books found</td>
-                      </tr>
-                  <?php }
-            } else { ?>
-                <tr>
-                    <td colspan="6" class="text-center">You must be an admin to view Books</td>
-                </tr>
-            <?php } ?>
-          </tbody>
-        </table>
-      </div>
-    </main>
-  </div>
-</div>
+            <?php endforeach; ?>
+          <?php else: ?>
+            <tr><td colspan="6" class="text-center">No books found.</td></tr>
+          <?php endif; ?>
+        </tbody>
+      </table>
+    </div>
+  </main>
 
-  <!-- Add Books Modal -->
-  <div class="modal fade" id="addBooksModal" tabindex="-1" aria-labelledby="addBooksModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="addBooksModalLabel">Add New Books</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form action="../Logic/addBook.php" method="post">
+  <!-- Add Book Modal -->
+  <div class="modal fade" id="addBookModal" tabindex="-1" aria-labelledby="addBookModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <form action="<?= htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="post" novalidate>
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addBookModalLabel">Add New Book</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
             <div class="mb-3">
-              <label for="Books_name" class="form-label">Books Name</label>
-              <input type="text" class="form-control" id="Books_name" name="Books_name" required>
+              <label for="Book_name" class="form-label">Book Name</label>
+              <input type="text" class="form-control" id="Book_name" name="Book_name" required />
             </div>
             <div class="mb-3">
-              <label for="Books_desc" class="form-label">Books Description</label>
-              <textarea class="form-control" id="Books_desc" name="Books_desc" rows="3" required></textarea>
+              <label for="description" class="form-label">Description</label>
+              <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
             </div>
             <div class="mb-3">
-              <label for="Books_price" class="form-label">Books Price</label>
-              <select class="form-select" id="Books_price" name="Books_price" required>
-                <option value="">Select Price</option>
+              <label for="Price" class="form-label">Price</label>
+              <select class="form-select" id="Price" name="Price" required>
+                <option value="" disabled selected>Select Price</option>
                 <option value="5">5</option>
                 <option value="15">15</option>
                 <option value="20">20</option>
-                <option value="30">>30</option>
+                <option value="30+">30+</option>
               </select>
             </div>
             <div class="mb-3">
-              <label for="Books_rating" class="form-label">Rating (1-10)</label>
-              <input type="number" class="form-control" id="Books_rating" name="Books_rating" min="1" max="10" required>
+              <label for="rating" class="form-label">Rating (1-10)</label>
+              <input type="number" class="form-control" id="rating" name="rating" min="1" max="10" required />
             </div>
             <div class="mb-3">
               <label for="Books_image" class="form-label">Image Filename</label>
-              <input type="text" class="form-control" id="Books_image" name="Books_image" placeholder="example.jpg" required>
+              <input type="text" class="form-control" id="Books_image" name="Books_image" placeholder="example.jpg" required />
             </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-              <button type="submit" class="btn btn-primary" name="submit">Add Books</button>
-            </div>
-          </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" name="submit" class="btn btn-primary">Add Book</button>
+          </div>
         </div>
-      </div>
+      </form>
     </div>
   </div>
 
-	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
-
-      <script src="https://cdn.jsdelivr.net/npm/feather-icons@4.28.0/dist/feather.min.js" integrity="sha384-uO3SXW5IuS1ZpFPKugNNWqTZRRglnUJK6UAZ/gxOX80nxEkN9NcGZTftn6RzhGWE" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js" integrity="sha384-zNy6FEbO50N+Cg5wap8IKA4M/ZnLJgzc6w2NqACZaK0u0FXfOWRRJOnQtpZun8ha" crossorigin="anonymous"></script><script src="dashboard.js"></script>
-  </body>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
 </html>
-
-
- </body>
- </html>

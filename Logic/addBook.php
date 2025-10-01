@@ -1,38 +1,73 @@
-<?php	
+<?php
+session_start();
+include_once('../Database/config.php');
 
-//Including config.php file for connection with dataBase 
-	include_once('../database/config.php');
+// Check if user is logged in and is admin
+if (!isset($_SESSION['id'])) {
+    header("Location: ../Forms/login.php");
+    exit;
+}
 
-//If the Button Add Book in Books.php is pressed, we will get datas that users added into the form, and insert them into dataBase :
-	if(isset($_POST['submit']))
-	{
+if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== 1) {
+    echo "Access denied. You are not an admin.";
+    exit;
+}
 
-		$Books_name = $_POST['Books_name'];
-		$Books_desc = $_POST['Books_desc'];
-		$Books_price = $_POST['Books_price'];
-		$Books_rating = $_POST['Books_rating'];
-		$Books_image = $_POST['Books_image'];
-	
+// Handle form submission to add a new book
+if (isset($_POST['submit'])) {
+    if (
+        isset($_POST['Book_name'], $_POST['description'], $_POST['Price'], $_POST['rating'], $_POST['Books_image'])
+        && $_POST['Book_name'] !== '' && $_POST['description'] !== '' && $_POST['Price'] !== ''
+        && $_POST['rating'] !== '' && $_POST['Books_image'] !== ''
+    ) {
+        $Book_name = $_POST['Book_name'];
+        $description = $_POST['description'];
+        $Price = $_POST['Price'];
+        $rating = $_POST['rating'];
+        $Books_image = $_POST['Books_image'];
 
-		$sql = "INSERT INTO books(Books_name, Books_desc, Books_price, Books_rating, Books_image) VALUES (:Books_name, :Books_desc, :Books_price, :Books_rating, :Books_image)";
+        try {
+            // Use backticks for column names with spaces
+            $sql = "INSERT INTO books (`Book name`, description, Price, rating, Books_image) 
+                    VALUES (:Book_name, :description, :Price, :rating, :Books_image)";
+            $insertbook = $conn->prepare($sql);
 
-        $insertbook = $conn->prepare($sql);
-			
+            $insertbook->bindParam(':Book_name', $Book_name, PDO::PARAM_STR);
+            $insertbook->bindParam(':description', $description, PDO::PARAM_STR);
+            $insertbook->bindParam(':Price', $Price, PDO::PARAM_STR);
+            $insertbook->bindParam(':rating', $rating, PDO::PARAM_INT);
+            $insertbook->bindParam(':Books_image', $Books_image, PDO::PARAM_STR);
 
-		$insertbooks->BindParam(':Books_name', $Books_name);
-		$insertbooks->BindParam(':Books_desc', $Books_desc);
-		$insertbooks->BindParam(':Books_preice', $Books_price);
-		$insertbooks->BindParam(':Books_rating', $Books_rating);
-		$insertbooks->BindParam(':Books_image', $Books_image);
+            $insertbook->execute();
 
-		$insertbooks->execute();
+            $_SESSION['success_message'] = "Book added successfully!";
+            header("Location: ../Main/admin_dashboard.php");
+            exit;
+        } catch (PDOException $e) {
+            $_SESSION['error_message'] = "Database error: " . $e->getMessage();
+            header("Location: ../Main/admin_dashboard.php");
+            exit;
+        }
+    } else {
+        $_SESSION['error_message'] = "All fields are required!";
+        header("Location: ../Main/admin_dashboard.php");
+        exit;
+    }
+}
 
-		// Set success message
-		session_start();
-		$_SESSION['success_message'] = "Book added successfully!";
+// Fetch users
+$sql = "SELECT * FROM user";
+$selectUsers = $conn->prepare($sql);
+$selectUsers->execute();
+$users_data = $selectUsers->fetchAll(PDO::FETCH_ASSOC);
 
-		// Redirect to dashBoard
-		header("Location: dashBoard.php");
-		exit;
-	}
+// Fetch books
+$sql_Books = "SELECT * FROM books";
+$selectBooks = $conn->prepare($sql_Books);
+try {
+    $selectBooks->execute();
+    $Books_data = $selectBooks->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $Books_data = [];
+}
 ?>

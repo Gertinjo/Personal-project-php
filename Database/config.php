@@ -4,10 +4,12 @@ $pass="";
 $server="localhost";
 $dbname="gertidb1";
 
-try {
-	$conn =new PDO("mysql:host=$server;dbname=$dbname",$user,$pass);
-} catch (PDOException $e) {
-	echo "error: " . $e->getMessage();
-}
 
+try {
+    $conn = new PDO("mysql:host=localhost;dbname=gertidb1", "root", "");
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch(PDOException $e) {
+    die("Database connection failed: " . $e->getMessage());
+}
 ?>
+

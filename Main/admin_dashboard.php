@@ -131,6 +131,7 @@ $books_data = $conn->query("SELECT * FROM books")->fetchAll(PDO::FETCH_ASSOC);
     <h3 class="text-center mb-4">Admin Panel</h3>
     <a href="#" class="active"><i class="bi bi-speedometer2"></i> Dashboard</a>
     <a href="list_Books.php"><i class="bi bi-book"></i> Books</a>
+    <a href="purchaseH.php"><i class="bi bi-wallet2"></i> Purchase History</a>
     <a href="../Logic/logout.php"><i class="bi bi-box-arrow-right"></i> Logout</a>
   </nav>
 

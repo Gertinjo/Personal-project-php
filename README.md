@@ -1,1 +1,1 @@
-So i want a Library Management System where you can menage books and me mat sa koh e man librin. 2 role
+So i want a Book Management System where you can menage books and me mat sa koh e man librin. 2 role

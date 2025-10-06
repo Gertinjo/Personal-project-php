@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 01, 2025 at 07:15 PM
+-- Generation Time: Oct 06, 2025 at 07:16 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -42,7 +42,32 @@ CREATE TABLE `books` (
 --
 
 INSERT INTO `books` (`id`, `Book name`, `description`, `Price`, `rating`, `Books_image`, `Book_name`) VALUES
-(2, '', 'b', '5', 2, 'book.jpg', 'Book');
+(4, '', 'A timeless tale of love and loss aboard the ill-fated RMS Titanic. Amidst the grandeur and tragedy, two souls find each other in the face of destiny, passion, and heartbreak. A story that captures the depths of human emotion and the resilience of hope eve', '20', 9, '../images/titanic.jpg', NULL),
+(5, '', 'In a small town where memories fade and secrets linger, a young woman uncovers her family\'s hidden past through letters lost in time. A deeply moving tale of love, loss, and redemption that will touch your soul and remind you that sometimes, the quietest ', '15', 7, '../images/WSP.png', 'Whispers of the Forgotten'),
+(6, '', 'In the quiet village of Avignon, where lavender fields stretch endlessly under a fading sun, lives Eléa — a young woman caught between grief and discovery. After the sudden loss of her grandmother, she uncovers a box of old letters tucked away in an attic', '20', 7, '../images/the.jpg', 'The Letters We Left Behind');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `purchases`
+--
+
+CREATE TABLE `purchases` (
+  `id` int(11) NOT NULL,
+  `book_id` int(11) NOT NULL,
+  `quantity` int(11) NOT NULL DEFAULT 1,
+  `purchase_datetime` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `purchases`
+--
+
+INSERT INTO `purchases` (`id`, `book_id`, `quantity`, `purchase_datetime`) VALUES
+(1, 4, 1, '2025-10-06 18:37:24'),
+(2, 4, 2, '2025-10-06 18:38:08'),
+(3, 4, 3, '2025-10-06 18:43:06'),
+(4, 5, 3, '2025-10-06 18:59:02');
 
 -- --------------------------------------------------------
 
@@ -78,6 +103,13 @@ ALTER TABLE `books`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `purchases`
+--
+ALTER TABLE `purchases`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `book_id` (`book_id`);
+
+--
 -- Indexes for table `user`
 --
 ALTER TABLE `user`
@@ -91,13 +123,29 @@ ALTER TABLE `user`
 -- AUTO_INCREMENT for table `books`
 --
 ALTER TABLE `books`
-  MODIFY `id` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `purchases`
+--
+ALTER TABLE `purchases`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `user`
 --
 ALTER TABLE `user`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `purchases`
+--
+ALTER TABLE `purchases`
+  ADD CONSTRAINT `purchases_ibfk_1` FOREIGN KEY (`book_id`) REFERENCES `books` (`id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

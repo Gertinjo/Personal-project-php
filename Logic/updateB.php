@@ -6,7 +6,7 @@ We will get the changed data from edit.php file and update them into database
 	
 
 
-	if (isset($_POST['submit1'])) {
+	if (isset($_POST['submit'])) {
 		$id = $_POST['id'];
 		$Book_name = $_POST['Book_name'];
 		$description = $_POST['description'];

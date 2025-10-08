@@ -156,6 +156,7 @@ $books = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <nav>
     <a href="#">Home</a>
     <a href="about.php">About us</a>
+    <a href="contact.php">Contact</a>
 
 </nav>
 <div class="hero">

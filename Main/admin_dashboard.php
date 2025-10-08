@@ -33,7 +33,7 @@ if (isset($_POST['submit'])) {
         $Books_image = trim($_POST['Books_image']);
 
         try {
-            // Note: Backticks around Book name if your DB column has spaces
+            // Note: Backticks around Book_name if your DB column has spaces
             $sql = "INSERT INTO books (`Book_name`, description, Price, rating, Books_image) 
                     VALUES (:Book_name, :description, :Price, :rating, :Books_image)";
             $insertbook = $conn->prepare($sql);
@@ -240,9 +240,9 @@ $books_data = $conn->query("SELECT * FROM books")->fetchAll(PDO::FETCH_ASSOC);
                 <td><?= htmlspecialchars($book['Price']); ?></td>
                 <td><?= htmlspecialchars($book['rating']); ?></td>
                 <td>
-                  <a href="../Forms/editbook.php?id=<?= urlencode($user['id']); ?>" class="btn btn-sm btn-warning me-1">
-                <i class="bi bi-pencil"></i> Edit
-              </a>
+                  <a href="../Forms/editbook.php?id=<?= urlencode($book['id']); ?>" class="btn btn-sm btn-warning me-1">
+                    <i class="bi bi-pencil"></i> Edit
+                  </a>
                   <a href="../Logic/deletebook.php?id=<?= urlencode($book['id']); ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this book?');">
                     <i class="bi bi-trash"></i> Delete
                   </a>

@@ -61,12 +61,12 @@ if (!$book) {
 <div class="container">
     <h2>Edit Book Details</h2>
 
-    <form action="../logic/updateB.php" method="post">
+    <form action="../Logic/updateB.php" method="post">
         <input type="hidden" name="id" value="<?= $book['id'] ?>">
 
         <div class="mb-3">
             <label for="book_name" class="form-label">Book Name</label>
-            <input type="text" class="form-control" id="book_name" name="book_name" value="<?= htmlspecialchars($book['Book_name']) ?>" required>
+            <input type="text" class="form-control" id="Book_name" name="Book_name" value="<?= htmlspecialchars($book['Book_name']) ?>" required>
         </div>
 
         <div class="mb-3">
@@ -85,7 +85,7 @@ if (!$book) {
         </div>
 
         <div class="d-grid">
-            <button type="submit" name="submit1" class="btn btn-primary btn-lg">Update Book</button>
+            <button type="submit" name="submit" class="btn btn-primary btn-lg">Update Book</button>
         </div>
     </form>
 </div>

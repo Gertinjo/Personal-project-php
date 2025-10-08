@@ -1,15 +1,24 @@
 <?php 
-	/*
-	We will include config.php for connection with database.
-	Delete a user based on his id.
-	*/
-	include_once('../Database/config.php');
+// Delete a book by ID — Safe version
+include_once('../Database/config.php');
 
-	$id = $_GET['id'];
-	$sql = "DELETE FROM books WHERE id=:id";
-	$prep = $conn->prepare($sql);
-	$prep->bindParam(':id',$id);
-	$prep->execute();
+// Validate the ID before using it
+if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+    die("Invalid ID.");
+}
 
-	header("Location: ../main/admin_dashboard.php");
- ?>
+$id = (int)$_GET['id'];
+
+try {
+    $sql = "DELETE FROM books WHERE id = :id";
+    $prep = $conn->prepare($sql);
+    $prep->bindParam(':id', $id, PDO::PARAM_INT);
+    $prep->execute();
+
+    // Redirect if deletion successful
+    header("Location: ../Main/admin_dashboard.php");
+    exit;
+} catch (PDOException $e) {
+    echo "Error deleting book: " . $e->getMessage();
+}
+?>

@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['buy'])) {
     $stmtInsert = $conn->prepare($sqlInsert);
     if ($stmtInsert->execute(['book_id' => $book_id, 'quantity' => $quantity])) {
         $purchase_id = $conn->lastInsertId();
-        header("Location: purchase.php?purchase_id=" . $purchase_id);
+        header("Location: ../Main/purchase.php?purchase_id=" . $purchase_id);
         exit;
     } else {
         $purchase_error = "Error processing your purchase. Please try again.";

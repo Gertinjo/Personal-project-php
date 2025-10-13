@@ -157,7 +157,7 @@ $books = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <a href="#">Home</a>
     <a href="about.php">About us</a>
     <a href="contact.php">Contact</a>
-
+    <a href="../Logic/logout.php"><i class="bi bi-box-arrow-right"></i> Logout</a>
 </nav>
 <div class="hero">
     <h1>Explore The World of Books</h1>
